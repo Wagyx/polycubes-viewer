@@ -1,0 +1,145 @@
+.dg {
+	color: #000;
+	text-shadow: none;
+	font: 12px Arial, Helvetica, sans-serif;
+}
+
+.dg .a {
+	margin-right: 0px;
+}
+
+.dg .c input[type="checkbox"] {
+	margin-top: 7px;
+	accent-color: #ccc;
+}
+
+.dg .cr.boolean {
+	background-color: #eee;
+	border-left-color: #8F8F9D;
+	border-bottom: 1px solid #8F8F9D;
+
+	opacity: 0.95;
+}
+
+.dg .cr.boolean:hover {
+	background-color: #ccc;
+}
+
+.dg .cr.boolean .c {
+	width: 10%;
+}
+
+.dg .cr.boolean .property-name {
+	width: 89%;
+	float: right;
+	line-height: 27px;
+}
+
+.dg .cr.number {
+	background-color: #eee;
+	border-left-color: #8F8F9D;
+	border-bottom: 1px solid #8F8F9D;
+	opacity: 0.95;
+}
+
+.dg .c .slider {
+	background-color: #ccc;
+}
+
+.dg .c .slider:hover {
+	background-color: hsl(0, 0%, 83%);
+}
+
+.dg .cr.number .c input[type="text"] {
+	color: #000;
+	background-color: #ccc;
+}
+
+.dg .cr.function {
+	background-color: #eee;
+	border-left-color: #aaa;
+	border-bottom: 1px solid #aaa;
+	height: auto;
+	line-height: 27px;
+	opacity: 0.95;
+}
+.dg .cr.function:hover {
+	background-color: #ccc;
+}
+.dg .cr.function .property-name {
+	width: 90%;
+	float: left;
+}
+
+/* .dg .cr.function:active {
+	background-color: #f00;
+} */
+
+
+.dg .cr.string {
+	background-color: #eee;
+	border-left-color: #aaa;
+	border-bottom: 1px solid #aaa;
+	height: auto;
+	line-height: 20px;
+	opacity: 0.95;
+}
+.dg .cr.string .property-name {
+	width: 90%;
+	float: left;
+	padding-top: 4px;
+	padding-bottom: 4px;
+}
+
+.dg .cr.string .property-name p {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	/* width: 100%;
+	border: 1px solid black;
+	border-collapse: collapse; */
+}
+.dg .cr.string .property-name table {
+	width: 100%;
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+.dg .cr.string .property-name th, td {
+	border: 1px solid black;
+	text-align: center;
+}
+.dg li .cr.color {
+	background-color: #eee;
+	border-bottom: 1px solid #8F8F9D;
+}
+
+.dg li.title {
+	background-color: #ddd;
+	height: auto;
+	line-height: 25px;
+	background-image: url("../images/arrow-down.png");
+	border-bottom: 1px solid #aaa;
+	border-left: 3px solid #aaa;
+	opacity: 0.95;
+}
+
+.dg .closed li.title {
+	background-image: url("../images/arrow-right.png");
+}
+
+.dg.main .close-button {
+	background-color: #ccc;
+	color: #000;
+	text-shadow: 0 -1px 0 #ccc;
+}
+
+.dg.main .close-button:hover {
+	background-color: #aaa;
+	color: #000;
+	text-shadow: 0 -1px 0 #aaa;
+}
+
+.dg ul.info li{
+	background-color: #eee;
+	border-bottom: 0px;
+
+}
