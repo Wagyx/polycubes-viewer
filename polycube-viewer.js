@@ -123,9 +123,9 @@ function init() {
             const vec = new THREE.Vector3(0, 0, 0);
             //center the polycube
             if (gParameters.isCentered) {
-                vec.x = -(POLYCUBES[gCurrInd][0] - 1) / 2;
-                vec.y = -(POLYCUBES[gCurrInd][1] - 1) / 2;
-                vec.z = -(POLYCUBES[gCurrInd][2] - 1) / 2;
+                vec.x = -(getShape(gCurrInd)[0] - 1) / 2;
+                vec.y = -(getShape(gCurrInd)[1] - 1) / 2;
+                vec.z = -(getShape(gCurrInd)[2] - 1) / 2;
             }
             gCubesMesh.position.set(vec.x, vec.y, vec.z);
             gEdgesMesh.position.set(vec.x, vec.y, vec.z);
@@ -386,7 +386,7 @@ function render() {
 
 
 function updatePolyhedron(ind) {
-    const obj = POLYCUBES[ind];
+    const obj = getBits(ind);
     displayPolyhedron(obj);
     gInfoGui.name(makeInfoHtml(obj));
 }
@@ -426,7 +426,6 @@ function computePos(element) {
 function loadPolycubesFile(url) {
     (async () => {
         POLYCUBES = await parseGzipFile(url);
-        // POLYCUBES.length = 0;
         // POLYCUBES = await parseBitFile(url);
         gCurrInd = 0;
         updatePolyhedron(gCurrInd);
@@ -588,71 +587,76 @@ async function parseGzipFile(filename) {
 
 async function parseBitsStream(stream) {
     let now = performance.now();
-    const arrays = await readBinStream(stream);
+    const result = { arrayOffset: [0], arrayIndex: [0], arrays: await readBinStream(stream), length: 0 };
+    console.log("" + performance.now() - now + "ms");
+    now = performance.now();
+
     let iArray = 0;
     let ipos = 0;
-    const result = [];
-    while (iArray < arrays.length) {
-        let diff = arrays[iArray].length - ipos;
+    while (iArray < result.arrays.length) {
+        let diff = result.arrays[iArray].length - ipos;
         let x, y, z;
-        x = arrays[iArray][ipos];
+        x = result.arrays[iArray][ipos];
         if (diff >= 3) {
-            y = arrays[iArray][ipos + 1];
-            z = arrays[iArray][ipos + 2];
+            y = result.arrays[iArray][ipos + 1];
+            z = result.arrays[iArray][ipos + 2];
             ipos += 3;
         }
         else if (diff == 2) {
-            y = arrays[iArray][ipos + 1];
+            y = result.arrays[iArray][ipos + 1];
             iArray += 1;
-            z = arrays[iArray][0];
+            z = result.arrays[iArray][0];
             ipos = 1;
         }
         else if (diff == 1) {
             iArray += 1;
-            y = arrays[iArray][0];
-            z = arrays[iArray][1];
+            y = result.arrays[iArray][0];
+            z = result.arrays[iArray][1];
             ipos = 2;
         }
 
         const numBytes = Math.ceil(x * y * z / 8);
-        const polycubeData = new Uint8Array(numBytes + 3);
-        polycubeData[0] = x;
-        polycubeData[1] = y;
-        polycubeData[2] = z;
         let j = 0;
         while (j < numBytes) {
-            diff = arrays[iArray].length - ipos;
+            diff = result.arrays[iArray].length - ipos;
             if ((numBytes - j) < diff) {
-                polycubeData.set(arrays[iArray].slice(ipos, ipos + numBytes - j), j + 3);
                 ipos += (numBytes - j);
                 j = numBytes;
             }
             else {
-                polycubeData.set(arrays[iArray].slice(ipos), j + 3);
                 j += diff;
                 iArray += 1;
                 ipos = 0;
             }
         }
-        result.push(polycubeData)
+        result.arrayOffset.push(ipos);
+        result.arrayIndex.push(iArray);
     }
+    result.arrayOffset.splice(result.arrayOffset.length - 1);
+    result.arrayIndex.splice(result.arrayIndex.length - 1);
+    result.arrayOffset = new Uint16Array(result.arrayOffset);
+    result.arrayIndex = new Uint32Array(result.arrayIndex);
+    result.length = result.arrayIndex.length;
     console.log("" + performance.now() - now + "ms");
+
     return result;
 }
 
 
 function parseBitArrayBuffer(arrayBuf) {
-    const arr = new Uint8Array(arrayBuf);
-    const result = [];
+    const result = { arrays: [new Uint8Array(arrayBuf)], length: 0, arrayIndex: [], arrayOffset: [] };
     let iArr = 0;
-    while (iArr < arr.length) {
-        const prod = arr[iArr] * arr[iArr + 1] * arr[iArr + 2];
+    while (iArr < result.arrays[0].length) {
+        result.arrayOffset.push(iArr);
+        result.arrayIndex.push(0);
+        const prod = result.arrays[0][iArr] * result.arrays[0][iArr + 1] * result.arrays[0][iArr + 2];
         const d = Math.ceil(prod / 8);
-        result.push(arr.slice(iArr, Math.min(iArr + d + 3, arr.length)));
-        iArr += d + 3;
+        iArr = iArr + d + 3;
     }
+    result.length=result.arrayIndex.length;
     return result;
 }
+
 async function parseBitFile(url) {
     const response = await fetch(url);
     return parseBitArrayBuffer(await response.arrayBuffer());
@@ -670,4 +674,77 @@ function bits2bytes(element) {
         }
     }
     return bytes;
+}
+
+function getShape(gCurrInd) {
+    let iArray = POLYCUBES.arrayIndex[gCurrInd];
+    let ipos = POLYCUBES.arrayOffset[gCurrInd];
+
+    let diff = POLYCUBES.arrays[iArray].length - ipos;
+    let x, y, z;
+    x = POLYCUBES.arrays[iArray][ipos];
+    if (diff >= 3) {
+        y = POLYCUBES.arrays[iArray][ipos + 1];
+        z = POLYCUBES.arrays[iArray][ipos + 2];
+        ipos = ipos + 3;
+    }
+    else if (diff == 2) {
+        y = POLYCUBES.arrays[iArray][ipos + 1];
+        iArray = iArray + 1;
+        z = POLYCUBES.arrays[iArray][0];
+        ipos = 1;
+    }
+    else if (diff == 1) {
+        iArray = iArray + 1;
+        y = POLYCUBES.arrays[iArray][0];
+        z = POLYCUBES.arrays[iArray][1];
+        ipos = 2;
+    }
+    return new Uint8Array([x, y, z]);
+}
+
+function getBits(gCurrInd) {
+    let iArray = POLYCUBES.arrayIndex[gCurrInd];
+    let ipos = POLYCUBES.arrayOffset[gCurrInd];
+    let diff = POLYCUBES.arrays[iArray].length - ipos;
+    let x, y, z;
+    x = POLYCUBES.arrays[iArray][ipos];
+    if (diff >= 3) {
+        y = POLYCUBES.arrays[iArray][ipos + 1];
+        z = POLYCUBES.arrays[iArray][ipos + 2];
+        ipos = ipos + 3;
+    }
+    else if (diff == 2) {
+        y = POLYCUBES.arrays[iArray][ipos + 1];
+        iArray = iArray + 1;
+        z = POLYCUBES.arrays[iArray][0];
+        ipos = 1;
+    }
+    else if (diff == 1) {
+        iArray = iArray + 1;
+        y = POLYCUBES.arrays[iArray][0];
+        z = POLYCUBES.arrays[iArray][1];
+        ipos = 2;
+    }
+    const numBytes = Math.ceil(x * y * z / 8);
+    const polycubeData = new Uint8Array(numBytes + 3);
+    polycubeData[0] = x;
+    polycubeData[1] = y;
+    polycubeData[2] = z;
+    let j = 0;
+    while (j < numBytes) {
+        diff = POLYCUBES.arrays[iArray].length - ipos;
+        if ((numBytes - j) < diff) {
+            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos, ipos + numBytes - j), j + 3);
+            ipos = ipos + (numBytes - j);
+            j = numBytes;
+        }
+        else {
+            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos), j + 3);
+            j += diff;
+            iArray = iArray + 1;
+            ipos = 0;
+        }
+    }
+    return polycubeData;
 }
