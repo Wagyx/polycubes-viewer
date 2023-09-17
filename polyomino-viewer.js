@@ -21,7 +21,7 @@ const gDefaultColor = { vertex: [1.0, 0.5, 0.0], edge: [0.1, 0.1, 0.1], face: [0
 // custom global variables
 let gPolyhedronMesh, gEdgesMesh, gCubesMesh;
 const gcCamZ = {
-    pos: [200, 200, 200],
+    pos: [0, 0, 20],
     up: [0, 1, 0],
     target: [0, 0, 0]
 };
@@ -38,7 +38,7 @@ const gParameters = {
     isCentered: false,
 };
 gParameters.rotationDirection.normalize();
-const gSimpleCubeData = createSimpleCubeData();
+const gSimpleCubeData = createSimplePlaneData();
 // const gSimpleCubeEdgeMesh = createSimpleCubeEdgeGeometry(gSimpleCubeData);
 
 const gClock = new THREE.Clock();
@@ -53,8 +53,8 @@ function init() {
     // CAMERA
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const viewAngle = 45;
-    const near = 0.1;
+    const viewAngle = 60;
+    const near = 1;
     const far = 1000;
     gCamera = new THREE.PerspectiveCamera(viewAngle, width / height, near, far);
     gScene.add(gCamera);
@@ -79,8 +79,9 @@ function init() {
     // CONTROLS
     gControls = new TrackballControls(gCamera, gRenderer.domElement);
     gControls.noPan = true;
+    gControls.noRotate = true;
     gControls.rotateSpeed = 2.0;
-    gControls.maxDistance = 1000.0;
+    gControls.maxDistance = 50.0;
     gControls.minDistance = 5.0;
 
     ////////////
@@ -89,8 +90,8 @@ function init() {
     gPolyhedronMesh = new THREE.Object3D();
     gScene.add(gPolyhedronMesh);
 
-    gNumMaxCubes = 8000;
-    gNumMaxEdges = 8000;
+    gNumMaxCubes = 1024;
+    gNumMaxEdges = 1024;
     gEdgesMesh = makeEdgesMesh(gNumMaxEdges);
     gPolyhedronMesh.add(gEdgesMesh);
     gCubesMesh = makeCubesMesh(gNumMaxCubes);
@@ -101,12 +102,12 @@ function init() {
     /////////
     const gui = new dat.GUI();
     const optionsFd = gui.addFolder("Options");
-    optionsFd.add(gParameters, "transparency", 0.0, 1.0, 0.01)
-        .name("Transparency")
-        .onChange(function (value) {
-            gParameters.transparency = value;
-            gCubesMesh.material.opacity = 1.0 - gParameters.transparency;
-        });
+    // optionsFd.add(gParameters, "transparency", 0.0, 1.0, 0.01)
+    //     .name("Transparency")
+    //     .onChange(function (value) {
+    //         gParameters.transparency = value;
+    //         gCubesMesh.material.opacity = 1.0 - gParameters.transparency;
+    //     });
     optionsFd.add(gParameters, "edgesActive")
         .name("Show Edges")
         .onChange(function (value) {
@@ -125,7 +126,7 @@ function init() {
             if (gParameters.isCentered) {
                 vec.x = -(getShape(gCurrInd)[0] - 1) / 2;
                 vec.y = -(getShape(gCurrInd)[1] - 1) / 2;
-                vec.z = -(getShape(gCurrInd)[2] - 1) / 2;
+                vec.z = 0;
             }
             gCubesMesh.position.set(vec.x, vec.y, vec.z);
             gEdgesMesh.position.set(vec.x, vec.y, vec.z);
@@ -174,7 +175,7 @@ function init() {
 
     const datasetsFolder = gui.addFolder("Datasets");
     const categoryFolders = {};
-    for (let el of polycubesDatasets) {
+    for (let el of polyominoesDatasets) {
         const fd = el.category[0];
         if (!categoryFolders.hasOwnProperty(fd)) {
             categoryFolders[fd] = datasetsFolder.addFolder(fd);
@@ -221,7 +222,7 @@ function init() {
         }
     });
 
-    loadPolycubesFile("data/bits.gzip/polycubes/cubes_8.bits.gz");
+    loadPolycubesFile("data/bits.gzip/polyominoes/polyominoes_5.bits.gz");
 
     gui.open();
     // EVENTS
@@ -262,11 +263,11 @@ function makeCubesMesh(nbMaxElements) {
         side: THREE.DoubleSide,
         // emissive: new THREE.Color(0.2,0.2,0.2),
         transparent: true,
-        opacity: 1.0 - gParameters.transparency,
+        opacity: 1.0, //- gParameters.transparency,
         visible: gParameters.facesActive,
     });
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const geometry = new THREE.PlaneGeometry(1, 1);
     const mesh = new THREE.InstancedMesh(geometry, material, nbMaxElements);
     mesh.count = 0;
     return mesh;
@@ -318,7 +319,7 @@ function displayPolyhedron(polycubeData) {
     if (gParameters.isCentered) {
         center.x = (polycubeData[0] - 1) / 2;
         center.y = (polycubeData[1] - 1) / 2;
-        center.z = (polycubeData[2] - 1) / 2;
+        center.z = 0;
     }
     gCubesMesh.position.set(-center.x, -center.y, -center.z);
     gEdgesMesh.position.set(-center.x, -center.y, -center.z);
@@ -400,7 +401,7 @@ function makeInfoHtml(data) {
     message.push("Polycube index: " + (gCurrInd + 1));
     message.push("</p>");
     message.push("<p>");
-    message.push("Polycube shape: (" + data.slice(0, 3) + ")");
+    message.push("Polycube shape: (" + data.slice(0, 2) + ")");
     message.push("</p>");
     message.push("<p>");
     message.push("Cubes in polycube: " + gCubesMesh.count);
@@ -413,11 +414,10 @@ function computePos(element) {
     const bytes = bits2bytes(element);
     for (let ibit = 0, li = bytes.length; ibit < li; ++ibit) {
         if (bytes[ibit]) {
-            //const ibit = ((x*ny+y)*nz+z) = x*ny*nz + y*nz + z
-            let z = (ibit % element[2]);
-            let y = ((ibit - z) / element[2]) % element[1];
-            let x = (ibit - z - y * element[2]) / (element[2] * element[1]);
-            positions.push(new THREE.Vector3(x, y, z));
+            //const ibit = x*ny + y
+            let y = ibit % element[1];
+            let x = (ibit - y) / element[1];
+            positions.push(new THREE.Vector3(x, y));
         }
     }
     return positions;
@@ -494,24 +494,16 @@ function previousPoly(nb) {
     updatePolyhedron(gCurrInd);
 }
 
-function createSimpleCubeData() {
+function createSimplePlaneData() {
     const cubeMesh = {
         vertices: [
-            [0.5, 0.5, 0.5],
-            [0.5, 0.5, -0.5],
-            [0.5, -0.5, 0.5],
-            [0.5, -0.5, -0.5],
-            [-0.5, 0.5, 0.5],
-            [-0.5, 0.5, -0.5],
-            [-0.5, -0.5, 0.5],
-            [-0.5, -0.5, -0.5]],
+            [0.5,  0.5, 0],
+            [0.5,  -0.5, -0],
+            [-0.5, 0.5, 0],
+            [-0.5, -0.5, -0],
+            ],
         faces: [
-            [0, 4, 6, 2],
-            [3, 2, 6, 7],
-            [7, 6, 4, 5],
-            [5, 1, 3, 7],
             [1, 0, 2, 3],
-            [5, 4, 0, 1],
         ],
         edges: [],
     };
@@ -595,27 +587,19 @@ async function parseBitsStream(stream) {
     let ipos = 0;
     while (iArray < result.arrays.length) {
         let diff = result.arrays[iArray].length - ipos;
-        let x, y, z;
+        let x, y;
         x = result.arrays[iArray][ipos];
-        if (diff >= 3) {
+        if (diff >= 2) {
             y = result.arrays[iArray][ipos + 1];
-            z = result.arrays[iArray][ipos + 2];
-            ipos += 3;
-        }
-        else if (diff == 2) {
-            y = result.arrays[iArray][ipos + 1];
-            iArray += 1;
-            z = result.arrays[iArray][0];
-            ipos = 1;
+            ipos += 2;
         }
         else if (diff == 1) {
             iArray += 1;
             y = result.arrays[iArray][0];
-            z = result.arrays[iArray][1];
-            ipos = 2;
+            ipos = 1;
         }
 
-        const numBytes = Math.ceil(x * y * z / 8);
+        const numBytes = Math.ceil(x * y / 8);
         let j = 0;
         while (j < numBytes) {
             diff = result.arrays[iArray].length - ipos;
@@ -638,7 +622,6 @@ async function parseBitsStream(stream) {
     result.arrayIndex = new Uint32Array(result.arrayIndex);
     result.length = result.arrayIndex.length;
     console.log("" + performance.now() - now + "ms");
-    console.log(result);
     return result;
 }
 
@@ -649,9 +632,9 @@ function parseBitArrayBuffer(arrayBuf) {
     while (iArr < result.arrays[0].length) {
         result.arrayOffset.push(iArr);
         result.arrayIndex.push(0);
-        const prod = result.arrays[0][iArr] * result.arrays[0][iArr + 1] * result.arrays[0][iArr + 2];
+        const prod = result.arrays[0][iArr] * result.arrays[0][iArr + 1];
         const d = Math.ceil(prod / 8);
-        iArr = iArr + d + 3;
+        iArr = iArr + d + 2;
     }
     result.length=result.arrayIndex.length;
     return result;
@@ -663,11 +646,11 @@ async function parseBitFile(url) {
 }
 
 function bits2bytes(element) {
-    const prod = element[0] * element[1] * element[2];
+    const prod = element[0] * element[1];
     const bytes = new Uint8Array(prod);
-    const d = element.length - 3;
+    const d = element.length - 2;
     for (let j = 0; j < d; ++j) {
-        let value = element[j + 3];
+        let value = element[j + 2];
         for (let ibit = 0; ibit < 8; ++ibit) {
             bytes[ibit + j * 8] = value & 1;
             value = value >>> 1;
@@ -681,66 +664,49 @@ function getShape(gCurrInd) {
     let ipos = POLYCUBES.arrayOffset[gCurrInd];
 
     let diff = POLYCUBES.arrays[iArray].length - ipos;
-    let x, y, z;
+    let x, y;
     x = POLYCUBES.arrays[iArray][ipos];
-    if (diff >= 3) {
+    if (diff >= 2) {
         y = POLYCUBES.arrays[iArray][ipos + 1];
-        z = POLYCUBES.arrays[iArray][ipos + 2];
-        ipos = ipos + 3;
-    }
-    else if (diff == 2) {
-        y = POLYCUBES.arrays[iArray][ipos + 1];
-        iArray = iArray + 1;
-        z = POLYCUBES.arrays[iArray][0];
-        ipos = 1;
+        ipos = ipos + 2;
     }
     else if (diff == 1) {
         iArray = iArray + 1;
         y = POLYCUBES.arrays[iArray][0];
-        z = POLYCUBES.arrays[iArray][1];
-        ipos = 2;
+        ipos = 1;
     }
-    return new Uint8Array([x, y, z]);
+    return new Uint8Array([x, y]);
 }
 
 function getBits(gCurrInd) {
     let iArray = POLYCUBES.arrayIndex[gCurrInd];
     let ipos = POLYCUBES.arrayOffset[gCurrInd];
     let diff = POLYCUBES.arrays[iArray].length - ipos;
-    let x, y, z;
+    let x, y;
     x = POLYCUBES.arrays[iArray][ipos];
-    if (diff >= 3) {
+    if (diff >= 2) {
         y = POLYCUBES.arrays[iArray][ipos + 1];
-        z = POLYCUBES.arrays[iArray][ipos + 2];
-        ipos = ipos + 3;
-    }
-    else if (diff == 2) {
-        y = POLYCUBES.arrays[iArray][ipos + 1];
-        iArray = iArray + 1;
-        z = POLYCUBES.arrays[iArray][0];
-        ipos = 1;
+        ipos = ipos + 2;
     }
     else if (diff == 1) {
         iArray = iArray + 1;
         y = POLYCUBES.arrays[iArray][0];
-        z = POLYCUBES.arrays[iArray][1];
-        ipos = 2;
+        ipos = 1;
     }
-    const numBytes = Math.ceil(x * y * z / 8);
-    const polycubeData = new Uint8Array(numBytes + 3);
+    const numBytes = Math.ceil(x * y / 8);
+    const polycubeData = new Uint8Array(numBytes + 2);
     polycubeData[0] = x;
     polycubeData[1] = y;
-    polycubeData[2] = z;
     let j = 0;
     while (j < numBytes) {
         diff = POLYCUBES.arrays[iArray].length - ipos;
         if ((numBytes - j) < diff) {
-            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos, ipos + numBytes - j), j + 3);
+            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos, ipos + numBytes - j), j + 2);
             ipos = ipos + (numBytes - j);
             j = numBytes;
         }
         else {
-            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos), j + 3);
+            polycubeData.set(POLYCUBES.arrays[iArray].slice(ipos), j + 2);
             j += diff;
             iArray = iArray + 1;
             ipos = 0;

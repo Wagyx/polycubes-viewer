@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Polycube Viewer</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<!-- <base href="https://www.w3schools.com/images/"> -->
+	<script type="importmap">
+		{
+			"imports": {
+				"three": "./js/three.module.js"
+			}
+		}
+	</script>
+	<link rel=stylesheet href="css/base.css" />
+	<!-- <link rel="icon" type="image/svg" href="favicon.svg" /> -->
+</head>
+
+<body>
+	<script type="text/javascript" src="js/dat.gui.js"></script>
+	<script type="text/javascript" src="js/polycubesDatasets.js"></script>
+	<!-- Code to display an information button and box when clicked. -->
+	<script src="js/jquery-1.9.1.js"></script>
+	<script src="js/jquery-ui.js"></script>
+	<link rel=stylesheet href="css/jquery-ui.css" />
+	<link rel=stylesheet href="css/info.css" />
+	<script src="js/info.js"></script>
+	<div id="infoButton"></div>
+	<div id="infoBox" title="Help page for the Polycube viewer">
+		<h2>
+			Controls:
+		</h2>
+		<ul>
+			<li>Rotate: Use a single finger on a touchscreen or the left click on your mouse</li>
+			<li>Zoom: Use two fingers on a touchscreen or the wheel on your mouse</li>
+			<li>Up/Down arrow: go to the previous/next polycube in the dataset</li>
+			<li>Left/Right arrow: go to the previous/next polycube in the dataset by a jump of 10 to the power of whatever value the step cursor is.
+				By default the cursor is at 3 so the jump is by 10^3=1000.</li>
+			<li>Reset: Press number 5 to reset both the camera position and the object rotation.</li>
+		</ul>
+
+		<h2>Notes:</h2>
+		<p>
+			This viewer was made to load and explore polycubes as were computed from the <a href="https://github.com/mikepound/opencubes">Opencubes</a> project.
+			Kudos to Mike Pound for starting this project, people managing the repo and others mathematicians before him that worked hard on pushing the computational limit.
+		</p>
+	</div>
+	<!-- ------------------------------------------------------------ -->
+	<div id="ThreeJS" style="position: absolute; left:0px; top:0px"></div>
+
+	<!-- Import maps polyfill -->
+	<!-- Remove this when import maps will be widely supported -->
+	<script src="js/es-module-shims.js"></script>
+	<script type="module" src="polycube-viewer.js"></script>
+	<!-- override dat.gui styles -->
+	<link rel=stylesheet href="css/dg.css" />
+
+</body>
+
+</html>
