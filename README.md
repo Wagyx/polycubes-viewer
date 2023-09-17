@@ -9,8 +9,6 @@ For the moment, this is a static web project with only simple HTML5, CSS and Jav
 The 3D rendering is made with the [three.js](https://github.com/mrdoob/three.js/) library.
 The GUI is handled by the [dat.GUI](https://github.com/dataarts/dat.gui) library.
 
-
-
 ## How to run
 For running this project locally, you have to create a local server.
 If you are using VSCode, please install the Live Server Extension.
@@ -37,3 +35,7 @@ Given a polycube that fits into a grid of shape (x,y,z), it is stored as:
 where data is the flattened 3D array where each bit indicates whether a cube occupies the position (1) or not (0).
 The size of the data bytes is ceil(xyz/8) with zero padding.
 See packing.py for the generating code.
+
+## Polyominoes
+I have duplicated the file to make it work for polyominoes too.
+I have also added the corresponding datasets.
