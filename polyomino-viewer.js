@@ -395,16 +395,16 @@ function updatePolyhedron(ind) {
 function makeInfoHtml(data) {
     const message = [];
     message.push("<p>");
-    message.push("Loaded polycubes: " + POLYCUBES.length);
+    message.push("Loaded polyominoes: " + POLYCUBES.length);
     message.push("</p>");
     message.push("<p>");
-    message.push("Polycube index: " + (gCurrInd + 1));
+    message.push("Polyomino index: " + (gCurrInd + 1));
     message.push("</p>");
     message.push("<p>");
-    message.push("Polycube shape: (" + data.slice(0, 2) + ")");
+    message.push("Polyomino shape: (" + data.slice(0, 2) + ")");
     message.push("</p>");
     message.push("<p>");
-    message.push("Cubes in polycube: " + gCubesMesh.count);
+    message.push("Squares in polyomino: " + gCubesMesh.count);
     message.push("</p>");
     return message.join("");
 }
